@@ -9,7 +9,7 @@ contract nUSD is ERC20 {
 
     constructor() ERC20("Nusd", "Nusd") {
         ethUsdPriceFeed = AggregatorV3Interface(
-            0x694AA1769357215DE4FAC081bf1f309aDC325306
+            0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
         );
     }
 
@@ -18,9 +18,9 @@ contract nUSD is ERC20 {
     mapping(address => uint256) public balances;
 
     function redeem(uint256 nUsdAmount) external {
-        require(nUsdAmount > 0, "nUSD amount must be greater than zero.");
-        // Calculate ETH amount (double the nUSD value)
-        uint256 ethAmount = getEthPrice() * nUsdAmount * 2;
+        uint usrBalance = balanceOf(msg.sender);
+        require(nUsdAmount < usrBalance, "nUSD amount must be greater than zero.");
+        uint256 ethAmount = usrBalance/getEthPrice();
         console.log("paying", ethAmount);
         _burn(msg.sender, nUsdAmount);
         (bool success, ) = msg.sender.call{value: ethAmount}("");
@@ -33,7 +33,7 @@ contract nUSD is ERC20 {
     function getEthPrice() public view returns (uint256) {
         (, int256 price, , , ) = ethUsdPriceFeed.latestRoundData();
         require(price > 0, "Invalid ETH price.");
-        return uint256(price);
+        return uint256(price)/10**8;
     }
 
     // Events
@@ -41,11 +41,11 @@ contract nUSD is ERC20 {
     event Redeem(address indexed user, uint256 nUsdAmount, uint256 ethAmount);
     function deposit() external payable {
         require(msg.value > 0, "ETH amount must be greater than zero.");
-
-        // Calculate nUSD amount (50% of ETH value)
-        uint256 nUsdAmount = ((msg.value * 50) / 100);
-        console.log("deposite", nUsdAmount);
-        _mint(msg.sender, nUsdAmount);
+        console.log(getEthPrice());
+        // Calculate nUSD amount
+        uint256 nUsdAmount = getEthPrice()*(msg.value);
+        console.log("deposited", nUsdAmount/10**18);
+        _mint(msg.sender,nUsdAmount/10**18);
         // Emit event
         emit Deposit(msg.sender, msg.value, nUsdAmount);
     }
