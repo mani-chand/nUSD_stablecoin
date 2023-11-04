@@ -8,6 +8,7 @@ contract nUSD is ERC20 {
     address internal owner;
 
     constructor() ERC20("Nusd", "Nusd") {
+        // ETH mainnet fork
         ethUsdPriceFeed = AggregatorV3Interface(
             0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
         );
